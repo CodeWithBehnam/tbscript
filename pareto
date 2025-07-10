@@ -1,0 +1,41 @@
+using System;
+using TabularEditor.TOMWrapper;
+
+if (Selected.Measures.Count != 1 || Selected.Columns.Count != 1)
+{
+    Error("Please select exactly one measure (your base metric) and one column (your category axis).");
+    return;
+}
+
+var selectedMeasure = Selected.Measures.First();
+var selectedColumn = Selected.Columns.First();
+var categoryTableName = selectedColumn.Table.Name;
+var categoryColumnName = selectedColumn.Name;
+var measureName = selectedMeasure.Name;
+
+var dax = $@"
+VAR Total = CALCULATE([{measureName}], ALL('{categoryTableName}'))
+VAR CurrentValue = [{measureName}]
+VAR SummaryTable =
+    SUMMARIZE(
+        ALLSELECTED('{categoryTableName}'),
+        '{categoryTableName}'[{categoryColumnName}],
+        ""Value"", [{measureName}]
+    )
+VAR CumulativeSum =
+    SUMX(
+        FILTER(
+            SummaryTable,
+            [Value] >= CurrentValue
+        ),
+        [Value]
+    )
+RETURN
+    DIVIDE(CumulativeSum, Total)
+";
+
+var paretoMeasure = selectedMeasure.Table.AddMeasure("Pareto % of " + measureName, dax);
+paretoMeasure.FormatString = "0.00%";
+paretoMeasure.Description = "Pareto cumulative percentage based on [" + measureName + "] sorted by descending value across '" + categoryTableName + "'[" + categoryColumnName + "]. Use in a chart with [" + measureName + "] bars sorted descending.";
+
+Info("Pareto measure created successfully.");
