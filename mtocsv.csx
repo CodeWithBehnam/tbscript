@@ -1,9 +1,12 @@
 // Updated C# script for Tabular Editor 2 to export all measure descriptions (including table names) to a CSV file.
 // This version prompts the user to select the save location using a SaveFileDialog.
-// Corrected namespace to System.Windows.Forms (available in Tabular Editor) and fixed dialog result check.
-
-using System.Text;
+#r "System.Windows.Forms"
 using System.Windows.Forms;
+
+using Microsoft.Win32;
+using System.Text;
+using System.Windows;
+using System.Data;
 
 var sb = new StringBuilder();
 sb.AppendLine("\"Table\",\"Measure\",\"Description\"");
